@@ -25,19 +25,14 @@ marshal_msg(char * cmd, char * key, char * value)
 	if (cmd[0] == 's') {
 		marshal_msg -> method_type = SET;
 		num_bytes = strlen(value);
-		//marshal_msg -> value = malloc(sizeof(num_bytes));
 		marshal_msg -> value = value;
 		marshal_msg -> value_length = num_bytes;
 	} else {
 		marshal_msg -> method_type = GET;
 	}
-	//marshal_msg -> key = malloc(sizeof(key));
 	marshal_msg -> key = key;
 	marshal_msg -> key_length = strlen(key);
 	gwkv_marshal_client(marshal_msg, &temp);
-//    printf("This is temp. %s\n",temp);
-    //free(marshal_msg->value);
-    //free(marshal_msg->key);
     free(marshal_msg);
 	return temp;
 }
@@ -49,7 +44,7 @@ demarshal_msg(int sockfd)
 	int count = 0;
 	int i;
 	char* msg = malloc(1024);
-	struct operation* marshal_msg;// = malloc(sizeof(struct operation));
+	struct operation* marshal_msg;
 	int * status = malloc(sizeof(int));
 
     recv(sockfd,&curr_char,1,0);
@@ -61,8 +56,6 @@ demarshal_msg(int sockfd)
     else{
         msg[count] = curr_char;
         count++;
-    //    printf("%c",curr_char);
-        //printf("reading lines\n");
         i = 0;
         for(i=0; i<3; i++) {
             while(1) {
@@ -71,29 +64,11 @@ demarshal_msg(int sockfd)
                 count++;
 
                 if(curr_char == ' ') {
-      //              printf(" ");
                     break;
                 }
-        //        printf("%c",curr_char);
 
             }
         }
-       /* while(1) {
-            recv(sockfd, &curr_char, 1, 0);
-            if (curr_char == '\r') {
-                msg[count] = curr_char;
-                count++;
-                recv(sockfd, &curr_char, 1, 0);
-                if (curr_char == '\n') {
-                    msg[count] = curr_char;
-                    count++;
-                    break;
-                }
-            } else {
-                msg[count] = curr_char;
-            }
-            count++;
-        }*/
         while(1) {
             recv(sockfd, &curr_char, 1, 0);
             if (curr_char == '\r') {
@@ -110,18 +85,11 @@ demarshal_msg(int sockfd)
             }
             count++;
         }
-        //printf("\nEND\n");
-        //printf("\nstring is %s\n",msg);
     }
 	gwkv_demarshal_client(msg, &marshal_msg, status);
     free(status);
     free(msg); 
-  //  printf("Value is %s\n",*marshal_msg->value);
-	//if (*status == -1) {
-	//	return 0;
-	//} else {
-		return marshal_msg;
-	//}
+    return marshal_msg;
 }
 
 send_msg(int sockfd, char * temp)
@@ -139,7 +107,6 @@ send_msg(int sockfd, char * temp)
 read_get_msg(int sockfd)
 {
 	int bytes_received;
-	//char * recv_data = (char *)malloc(sizeof(char*)*1000);
 
 	struct operation* demarshaled_msg = malloc(sizeof(struct operation));
 	demarshaled_msg = demarshal_msg(sockfd);
@@ -218,18 +185,15 @@ int main(int argc, char ** argv)
 		perror("ERROR opening socket");
 		exit(-1);
 	}
-	//printf("socket created\n");
 	rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
 	if (rc == -1) {
 		perror("ERROR on connect");
 		close(sockfd);
 		exit(-1);
-		// TODO: could use goto here for error cleanup
 	}
 
     //create the marshalled message
     temp = marshal_msg(cmd, key, value);
- //   printf("This is temp return %s\n",temp);
 	//send the marshaled message to the server
 	send_msg(sockfd, temp);
 
@@ -242,7 +206,6 @@ int main(int argc, char ** argv)
 		freeaddrinfo(server);
 	close(sockfd);
 
-	//printf("Done.\n");
 	return 0;
 
 }
